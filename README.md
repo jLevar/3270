@@ -1,6 +1,14 @@
 # Weather Hero
 
+## Description
+Weather Hero is a python package that displays summary statistics derived from the Australian Weather Database.
+
+## Usage
+
+
 ## Setup
+
+### Module 1
 This project has been setup with systems designed for a scalable and clean codebase.
 
 Version Control - GitHub Repo
@@ -12,4 +20,7 @@ Virtual Environment - venv
 - requirements.txt allows anyone to replicate my venv
   - pip install -r requirements.txt 
  
- a
+### Module 2
+Added: describe_weather_data()
+Put .py file into ./weather_hero/ subdirectory and added __init__.py file
+ 
