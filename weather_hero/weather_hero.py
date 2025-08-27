@@ -21,7 +21,7 @@ def load_weather_data(file_path: str) -> pd.DataFrame:
     Returns:
     df (pd.DataFrame): A Pandas DataFrame containing the weather data.
     """
-    df = pd.read_csv(data_path)
+    df = pd.read_csv(file_path)
     print(df.head())
     return df
 
@@ -37,14 +37,14 @@ def describe_weather_data(df: pd.DataFrame) -> None:
     categorical_stats (pd.DataFrame): The summary statistics for categorical columns.
     """
     numerical_columns = df.select_dtypes(include=['number']).columns
-    cateorgorical_columns = df.select_dtypes(include=['object']).columns
+    categorical_columns = df.select_dtypes(include=['object']).columns
     numerical_stats = pd.DataFrame({
                 'mean': df[numerical_columns].mean(), 
                 'median': df[numerical_columns].median(), 
                 'mode': df[numerical_columns].mode().iloc[0],
                 'range': df[numerical_columns].max() - df[numerical_columns].min()
             })
-    categorical_stats = df[cateorgorical_columns].describe()
+    categorical_stats = df[categorical_columns].describe()
     print(numerical_stats, "\n--------------------\n")
     print(categorical_stats)
     return numerical_stats, categorical_stats
