@@ -36,3 +36,11 @@ Added WeatherLoader, WeatherAnalyzer, WeatherSaver, and WeatherHero classes to w
 - WeatherHero 
   - Loads, analyzes, and saves weather data summary statistics. (Using the above classes)
         
+This design makes use of OOP principles such as 
+- Encapsulation
+- Abstraction
+- Single Responsiblity Principle
+- Composition
+- and more!
+
+To lean in to the metaphor in the lecture video, I made each of the program's functionalities into its own instrument, and made a WeatherHero class to compose them into an organized orchestra.
