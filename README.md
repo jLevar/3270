@@ -24,3 +24,15 @@ Virtual Environment - venv
 Added: describe_weather_data()
 Put .py file into ./weather_hero/ subdirectory and added __init__.py file
  
+### Module 3
+Added WeatherLoader, WeatherAnalyzer, WeatherSaver, and WeatherHero classes to weather_hero.py 
+
+- WeatherLoader
+  - Loads weather data from a CSV file into Pandas DataFrame
+- WeatherAnalyzer
+  - Analyzes weather data from a Pandas DataFrame
+- WeatherSaver
+  - Saves the summary statistics to a CSV file.
+- WeatherHero 
+  - Loads, analyzes, and saves weather data summary statistics. (Using the above classes)
+        

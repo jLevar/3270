@@ -1,4 +1,4 @@
-from .weather_hero import load_weather_data, describe_weather_data # AI Written
+from .weather_hero import WeatherHero
 
 """
 This is included to allow users to do:

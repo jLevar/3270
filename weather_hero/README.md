@@ -4,8 +4,7 @@ A simple Python package to load and summarize weather data from a CSV file.
 
 ## Features
 - Load weather data from a CSV file into a Pandas DataFrame
-- Display the first five rows of the dataset
-- Print summary statistics for numerical and categorical columns
+- Save summary statistics for numerical and categorical columns to CSV
 
 ## Requirements
 - Python 3.10+
