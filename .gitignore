@@ -1,3 +1,4 @@
 data/
 venv/
 weather_hero/**/
+logs/

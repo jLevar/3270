@@ -7,4 +7,5 @@ if __name__ == "__main__":
     output_path = os.path.join(base_dir, 'data', 'Weather Summary.csv')
     weather_hero = WeatherHero(data_path, output_path)
     weather_hero.process_weather_data()
+    print("Success!")
     

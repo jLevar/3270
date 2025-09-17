@@ -44,3 +44,13 @@ This design makes use of OOP principles such as
 - and more!
 
 To lean in to the metaphor in the lecture video, I made each of the program's functionalities into its own instrument, and made a WeatherHero class to compose them into an organized orchestra.
+
+### Module 4
+
+I added robust error handling by using try and except blocks. I made an effort to specify the exception type whenever only one type
+of error was to be expected. Otherwise, I just used the generic Exception.
+
+I added log files and integrated logging into my error handling. Entries are categorized by level and appended to the log. This occurs whenever a significant process is completed successfully, or when any error is encountered.
+
+I added generator/iterator functionality by creating an iter_rows() function in the DataLoader. This allows the program to read rows
+from the CSV in batches, making it more robust in handling larger files. 

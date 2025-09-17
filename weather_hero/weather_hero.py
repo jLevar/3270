@@ -1,24 +1,33 @@
 """
 weather_hero.py
 
-A simple module to read and display weather data from a CSV file.
+A simple module to load and analyze weather data from a CSV file.
 
-Functions:
-    load_weather_data(file_path: str): Loads CSV weather data
-    describe_weather_data(df: pd.DataFrame): Prints summary statistics of the weather data
+Classes:
+WeatherLoader - Loads weather data from a CSV file into a Pandas DataFrame.
+WeatherAnalyzer - Analyzes weather data from a Pandas DataFrame
+WeatherSaver - Saves weather analysis data to CSV
+WeatherHero - Loads and analyzes weather data and saves summary statistics 
 """
 
 import os
 import pandas as pd
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)-10s - %(asctime)s - %(module)-15s : %(message)s",
+    filename="logs/weather_hero.log"
+)
 
 class WeatherLoader:
     """
-    Loads weather data from a CSV file into Pandas DataFrame.
+    Loads weather data from a CSV file into a Pandas DataFrame.
     """
     def __init__(self, default_path: str):
         self.default_path = default_path
 
-    def load_weather_data(self, file_path) -> pd.DataFrame:
+    def load_weather_data(self, file_path: str = None) -> pd.DataFrame:
         """
         Loads weather data from a CSV file into Pandas DataFrame.
 
@@ -29,15 +38,46 @@ class WeatherLoader:
         df (pd.DataFrame): A Pandas DataFrame containing the weather data.
         """
         file_path = file_path or self.default_path
-        df = pd.read_csv(file_path)
-        self.df = df
+        try:
+            df = pd.read_csv(file_path)
+            logging.info(f"Successfully read file from {file_path}")
+        except FileNotFoundError as e:
+            logging.error(f"File Error: {e}")
+            raise
+        except pd.errors.ParserError as e:
+            logging.error(f"CSV Parsing Error: {e}")
+            raise
+        
         return df
+    
+    def iter_rows(self, file_path: str = None, chunk_size = 500):
+        """
+        Generator that yields chunks of a CSV file into Pandas DataFrame.
+
+        Parameters:
+        file_path (str): The path to the CSV file containing weather data.
+
+        Yields:
+        df (pd.DataFrame): A Pandas DataFrame containing a chunk of the weather data.
+        """
+        file_path = file_path or self.default_path
+        try:
+            for chunk in pd.read_csv(file_path, chunksize=chunk_size):
+                logging.info(f"Yielding {len(chunk)} rows from {file_path}")
+                yield chunk
+        except FileNotFoundError as e:
+            logging.error(f"File Error: {e}")
+            raise
+        except pd.errors.ParserError as e:
+            logging.error(f"CSV Parsing Error: {e}")
+            raise
+        
+
     
 class WeatherAnalyzer:
     """
     Analyzes weather data from a Pandas DataFrame
     """
-
     def __init__(self, df: pd.DataFrame):
         self.df = df
 
@@ -48,20 +88,30 @@ class WeatherAnalyzer:
         Returns:
         summary_statistics (dict): A dictionary containing summary statistics for numerical and categorical columns.
         """
-        df = self.df
-        numerical_columns = df.select_dtypes(include=['number']).columns
-        categorical_columns = df.select_dtypes(include=['object']).columns
-        numerical_stats = pd.DataFrame({
-                    'mean': df[numerical_columns].mean(), 
-                    'median': df[numerical_columns].median(), 
-                    'mode': df[numerical_columns].mode().iloc[0],
-                    'range': df[numerical_columns].max() - df[numerical_columns].min()
-                })
-        categorical_stats = df[categorical_columns].describe()
-        summary_statistics = {"numerical": numerical_stats, "categorical": categorical_stats}
-        return summary_statistics
+        try:
+            df = self.df
+            numerical_columns = df.select_dtypes(include=['number']).columns
+            categorical_columns = df.select_dtypes(include=['object']).columns
+            numerical_stats = pd.DataFrame({
+                        'mean': df[numerical_columns].mean(), 
+                        'median': df[numerical_columns].median(), 
+                        'mode': df[numerical_columns].mode().iloc[0],
+                        'range': df[numerical_columns].max() - df[numerical_columns].min()
+                    })
+            categorical_stats = df[categorical_columns].describe()
+            summary_statistics = {"numerical": numerical_stats, "categorical": categorical_stats}
+            logging.info(f"Successfully generated summary statistics on numerical columns {numerical_columns} and " 
+                        f"categorical columns {categorical_columns}")
+            return summary_statistics
+        except Exception as e:
+            logging.error(f"Failed to generate summary statistics. Terminating program due to error {e}")
+            raise
+        
     
 class WeatherSaver:
+    """
+    Saves weather analysis data to CSV
+    """
     def __init__(self, output_file: str):
         self.output_file = output_file
 
@@ -72,15 +122,21 @@ class WeatherSaver:
         Parameters:
         summary_statistics (pd.DataFrame): The summary statistics to save.
         """
-        with open(self.output_file, 'w') as f:
-            f.write("Numerical Summary Statistics\n")
-            summary_statistics["numerical"].to_csv(f)
-            f.write("\nCategorical Summary Statistics\n")
-            summary_statistics["categorical"].to_csv(f)
-            print(f"Weather summary saved to {self.output_file}")
+        try:
+            with open(self.output_file, 'w') as f:
+                f.write("Numerical Summary Statistics\n")
+                summary_statistics["numerical"].to_csv(f)
+                f.write("\nCategorical Summary Statistics\n")
+                summary_statistics["categorical"].to_csv(f)
+                logging.info(f"Weather summary saved to {self.output_file}")
+        except Exception as e:
+            logging.error(f"Failed to save weather summary - Error {e}")
         
 
 class WeatherHero:
+    """
+    Loads and analyzes weather data and saves summary statistics 
+    """
     def __init__(self, data_filepath: str, output_file: str):
         self.data_loader = WeatherLoader(data_filepath)
         self.data_storage = WeatherSaver(output_file)
@@ -88,13 +144,15 @@ class WeatherHero:
 
     def process_weather_data(self) -> None:
         """
-        Loads, analyzes, and saves weather data summary statistics.
+        Loads and analyzes weather data and saves summary statistics
         """
-        df = self.data_loader.load_weather_data(self.data_loader.default_path)
-        self.data_analyzer = WeatherAnalyzer(df)
-        summary_statistics = self.data_analyzer.generate_summary_statistics()
-        self.data_storage.save_summary(summary_statistics)
-        
+        try:
+            df = pd.concat([chunk for chunk in self.data_loader.iter_rows(self.data_loader.default_path, chunk_size=2000)])
+            self.data_analyzer = WeatherAnalyzer(df)
+            summary_statistics = self.data_analyzer.generate_summary_statistics()
+            self.data_storage.save_summary(summary_statistics)
+        except Exception as e:
+            logging.error(f"process_weather_data was terminated by the following error - {e}")    
 
 if __name__ == "__main__":
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) # AI Written
