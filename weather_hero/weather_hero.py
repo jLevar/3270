@@ -36,18 +36,27 @@ class WeatherLoader:
 
         Returns:
         df (pd.DataFrame): A Pandas DataFrame containing the weather data.
+
+        >>> wl = WeatherLoader("data/basic-data.csv")
+        >>> wl.load_weather_data().shape
+        (100, 4)
         """
         file_path = file_path or self.default_path
+        if not file_path.endswith(".csv"):
+            raise ValueError(f"Unsupported file type: {file_path}")
+        
         try:
             df = pd.read_csv(file_path)
-            logging.info(f"Successfully read file from {file_path}")
+            if len(df.axes[1]) == 1:
+                raise pd.errors.ParserError
         except FileNotFoundError as e:
             logging.error(f"File Error: {e}")
-            raise
+            raise 
         except pd.errors.ParserError as e:
             logging.error(f"CSV Parsing Error: {e}")
             raise
         
+        logging.info(f"Successfully read file from {file_path}")
         return df
     
     def iter_rows(self, file_path: str = None, chunk_size = 500):
@@ -59,19 +68,28 @@ class WeatherLoader:
 
         Yields:
         df (pd.DataFrame): A Pandas DataFrame containing a chunk of the weather data.
+
+        >>> wl = WeatherLoader("data/basic-data.csv")
+        >>> wl.iter_rows(chunk_size=22).__next__().shape
+        (22, 4)
         """
         file_path = file_path or self.default_path
+        if not file_path.endswith(".csv"):
+            raise ValueError(f"Unsupported file type: {file_path}")
+
         try:
-            for chunk in pd.read_csv(file_path, chunksize=chunk_size):
-                logging.info(f"Yielding {len(chunk)} rows from {file_path}")
-                yield chunk
+            with pd.read_csv(file_path, chunksize=chunk_size) as file:
+                for chunk in file:
+                    logging.info(f"Yielding {len(chunk)} rows from {file_path}")
+                    if len(chunk.axes[1]) == 1:
+                        raise pd.errors.ParserError
+                    yield chunk
         except FileNotFoundError as e:
             logging.error(f"File Error: {e}")
-            raise
+            raise 
         except pd.errors.ParserError as e:
             logging.error(f"CSV Parsing Error: {e}")
             raise
-        
 
     
 class WeatherAnalyzer:
@@ -87,6 +105,11 @@ class WeatherAnalyzer:
 
         Returns:
         summary_statistics (dict): A dictionary containing summary statistics for numerical and categorical columns.
+
+        >>> wl = WeatherLoader("data/basic-data.csv")
+        >>> wa = WeatherAnalyzer(wl.load_weather_data())
+        >>> wa.generate_summary_statistics()["numerical"].values.tolist()
+        [[44.53, 43.5, 32.0, 51.0]]
         """
         try:
             df = self.df
@@ -156,8 +179,8 @@ class WeatherHero:
 
 if __name__ == "__main__":
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) # AI Written
-    data_path = os.path.join(base_dir, 'data', 'Weather Test Data.csv') # AI Written
-    output_path = os.path.join(base_dir, 'data', 'Weather Summary.csv')
+    data_path = os.path.join(base_dir, 'data', 'test.csv') # AI Written
+    output_path = os.path.join(base_dir, 'data', 'summary.csv')
     weather_hero = WeatherHero(data_path, output_path)
     weather_hero.process_weather_data()
     

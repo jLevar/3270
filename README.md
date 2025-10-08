@@ -54,3 +54,13 @@ I added log files and integrated logging into my error handling. Entries are cat
 
 I added generator/iterator functionality by creating an iter_rows() function in the DataLoader. This allows the program to read rows
 from the CSV in batches, making it more robust in handling larger files. 
+
+### Module 5
+I added unit testing and doctesting to ensure correct functionality.
+
+Tested for:
+- Missing files
+- Wrong file types
+- Corrupt files
+- Accurate summary statistics
+- Successful save
