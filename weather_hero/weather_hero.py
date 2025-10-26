@@ -10,6 +10,8 @@ WeatherSaver - Saves weather analysis data to CSV
 WeatherHero - Loads and analyzes weather data and saves summary statistics 
 """
 
+import asyncio
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from functools import reduce
 import matplotlib.pyplot as plt
 import os
@@ -29,7 +31,7 @@ class WeatherLoader:
     def __init__(self, default_path: str):
         self.default_path = default_path
 
-    def load_weather_data(self, file_path: str = None) -> pd.DataFrame:
+    async def load_weather_data(self, file_path: str = None) -> pd.DataFrame:
         """
         Loads weather data from a CSV file into Pandas DataFrame.
 
@@ -48,7 +50,7 @@ class WeatherLoader:
             raise ValueError(f"Unsupported file type: {file_path}")
         
         try:
-            df = pd.read_csv(file_path)
+            df = await asyncio.to_thread(pd.read_csv, file_path)
             if len(df.axes[1]) == 1:
                 raise pd.errors.ParserError
         except FileNotFoundError as e:
@@ -163,6 +165,34 @@ class WeatherAnalyzer:
         plt.ylabel('Rainfall (mm)')
         plt.show()
 
+    def total_rainfall(self) -> pd.Series:
+        """
+        Parallelizes total rainfall computation across stations.
+        """
+        def compute_location_totals(df_chunk: pd.DataFrame) -> pd.Series:
+            """Compute rainfall totals for a subset of stations."""
+            totals = df_chunk.groupby("Location")["rainfall"].sum()
+            print(f"Processed {len(df_chunk)} rows")
+            return totals
+        
+        # Split dataframe by station (one chunk per station)
+        locations = [group for _, group in self.df.groupby("Location")]
+
+        results = []
+        with ProcessPoolExecutor() as executor:
+            futures = [executor.submit(compute_location_totals, group) for group in locations]
+
+            for future in as_completed(futures):
+                result = future.result()
+                results.append(result)
+
+        # Combine the results into a single Series
+        total_rainfall = pd.concat(results).groupby("Location").sum()
+
+        print("\nFinal total rainfall by Location:")
+        print(total_rainfall)
+        return total_rainfall
+
     def total_rainfall(self) -> None:
         records = self.df.to_dict('records')  
 
@@ -202,12 +232,20 @@ class WeatherHero:
     def __init__(self, data_filepath: str, output_file: str):
         self.data_loader = WeatherLoader(data_filepath)
         self.data_storage = WeatherSaver(output_file) 
-        self._load_weather_data()
+    
 
+    async def start(self):
+        await self._load_weather_data()
         self.data_analyzer = WeatherAnalyzer(self.df)
 
-    def _load_weather_data(self) -> None:
-        self.df = pd.concat([chunk for chunk in self.data_loader.iter_rows(self.data_loader.default_path, chunk_size=2000)])
+
+    async def _load_weather_data(self, mode:str = "full") -> None:
+        if mode == "full":
+            self.df = await self.data_loader.load_weather_data()
+        elif mode == "batch":
+            self.df = pd.concat([chunk for chunk in self.data_loader.iter_rows(self.data_loader.default_path, chunk_size=2000)])
+        else:
+            raise NotImplementedError(f"Mode {mode} not valid for WeatherHero _load_weather_data")
 
     def _clean_data(self) -> None:
         self.df['Rainfall'] = pd.to_numeric(self.df['Rainfall'], errors='coerce').fillna(0)
@@ -231,11 +269,17 @@ class WeatherHero:
         except Exception as e:
             logging.error(f"process_weather_data was terminated by the following error - {e}")    
 
-if __name__ == "__main__":
+
+async def main():
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) # AI Written
     data_path = os.path.join(base_dir, 'data', 'test.csv') # AI Written
     output_path = os.path.join(base_dir, 'data', 'summary.csv')
     weather_hero = WeatherHero(data_path, output_path)
+    await weather_hero.start()
     weather_hero.process_weather_data()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
     
     

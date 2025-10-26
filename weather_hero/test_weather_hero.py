@@ -1,29 +1,30 @@
+import asyncio
 import os
 import tempfile
 import unittest
 from weather_hero import WeatherLoader, WeatherSaver, WeatherAnalyzer, WeatherHero
 import pandas as pd
 
-class TestWeatherHero(unittest.TestCase):
+class TestWeatherHero(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         base_dir = os.path.dirname(__file__)
         self.test_file = os.path.join(base_dir, "data", "test.csv")
         self.loader = WeatherLoader(self.test_file)
     
-    def test_missing_file(self):
+    async def test_missing_file(self):
         with self.assertRaises(FileNotFoundError):
             wl = WeatherLoader("data/fake.csv")
-            wl.load_weather_data()
+            await wl.load_weather_data()
 
-    def test_non_csv_file(self):
+    async def test_non_csv_file(self):
         with self.assertRaises(ValueError):
             wl = WeatherLoader("data/words.txt")
-            wl.load_weather_data()
+            await wl.load_weather_data()
 
-    def test_bad_csv_file(self):    
+    async def test_bad_csv_file(self):    
         with self.assertRaises(pd.errors.ParserError):
             wl = WeatherLoader("data/corrupt.csv")
-            wl.load_weather_data()
+            await wl.load_weather_data()
 
         with self.assertRaises(pd.errors.ParserError):
             wl = WeatherLoader("data/corrupt.csv")
@@ -45,9 +46,9 @@ class TestWeatherHero(unittest.TestCase):
         self.assertEqual(summary_df["categorical"].loc["count"]["city"], 3)
 
 
-    def test_save(self):
+    async def test_save(self):
         wl = WeatherLoader("data/test.csv")
-        wa = WeatherAnalyzer(wl.load_weather_data())
+        wa = WeatherAnalyzer(await wl.load_weather_data())
         summary_df = wa.generate_summary_statistics()
         
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -113,4 +114,4 @@ class TestWeatherHero(unittest.TestCase):
 
 if __name__ == '__main__':
     print("Starting tests")
-    unittest.main()
+    asyncio.run(unittest.main())
