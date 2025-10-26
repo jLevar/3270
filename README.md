@@ -64,3 +64,17 @@ Tested for:
 - Corrupt files
 - Accurate summary statistics
 - Successful save
+
+### Module 6
+I made test cases to test the logic of:
+- Filtering a dataframe based on temperature
+- Mapping two variables of a dataframe together
+- Reducing a column of a dataframe
+
+As mentioned above, I used all of these functional programming techniques in this latest update.
+
+I used these techniques to create the following charts:
+- Average Rainfall on Hot vs Cold Days
+- Average Windspeed by Direction
+- Total Rainfall in Dataset
+

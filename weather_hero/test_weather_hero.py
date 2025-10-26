@@ -56,6 +56,60 @@ class TestWeatherHero(unittest.TestCase):
             ws.save_summary(summary_df)
             assert os.path.exists(file_path)
 
+    def test_total_rainfall(self):
+        df = pd.DataFrame([
+            {"MaxTemp": 35, "MinTemp": 15, "Rainfall": 5,  "WindGustDir": "N", "WindGustSpeed": 40},
+            {"MaxTemp": 28, "MinTemp": 8,  "Rainfall": 10, "WindGustDir": "E", "WindGustSpeed": 30},
+            {"MaxTemp": 33, "MinTemp": 20, "Rainfall": 0,  "WindGustDir": "N", "WindGustSpeed": 50},
+            {"MaxTemp": 18, "MinTemp": 5,  "Rainfall": 20, "WindGustDir": "E", "WindGustSpeed": 40},
+        ])
+        wa = WeatherAnalyzer(df)
+        records = wa.df.to_dict('records')
+        
+        from functools import reduce
+        total = reduce(lambda acc, x: acc + x['Rainfall'], records, 0)
+        self.assertEqual(total, 35)
+
+
+    def test_average_rainfall_hot_vs_cold(self):
+        df = pd.DataFrame([
+            {"MaxTemp": 35, "MinTemp": 15, "Rainfall": 5},
+            {"MaxTemp": 28, "MinTemp": 8,  "Rainfall": 10},
+            {"MaxTemp": 33, "MinTemp": 20, "Rainfall": 0},
+            {"MaxTemp": 18, "MinTemp": 5,  "Rainfall": 20},
+        ])
+        wa = WeatherAnalyzer(df)
+        records = wa.df.to_dict('records')
+
+        hot_days = list(filter(lambda x: x['MaxTemp'] > 30, records))
+        cold_days = list(filter(lambda x: x['MinTemp'] < 10, records))
+
+        hot_avg = pd.DataFrame(hot_days)["Rainfall"].mean()
+        cold_avg = pd.DataFrame(cold_days)["Rainfall"].mean()
+
+        self.assertEqual(hot_avg, 2.5)  # (5 + 0)/2
+        self.assertEqual(cold_avg, 15)  # (10 + 20)/2
+
+
+    def test_average_wind_speed_per_direction(self):
+        df = pd.DataFrame([
+            {"WindGustDir": "N", "WindGustSpeed": 40},
+            {"WindGustDir": "E", "WindGustSpeed": 30},
+            {"WindGustDir": "N", "WindGustSpeed": 50},
+            {"WindGustDir": "E", "WindGustSpeed": 40},
+        ])
+        wa = WeatherAnalyzer(df)
+        records = wa.df.to_dict('records')
+
+        wind_mapping = pd.DataFrame(
+            list(map(lambda x: (x['WindGustDir'], x['WindGustSpeed']), records)),
+            columns=['WindGustDir', 'WindGustSpeed']
+        )
+
+        wind_avg = wind_mapping.groupby('WindGustDir')['WindGustSpeed'].mean().to_dict()
+        self.assertEqual(wind_avg['N'], 45)
+        self.assertEqual(wind_avg['E'], 35)
+
 
 if __name__ == '__main__':
     print("Starting tests")

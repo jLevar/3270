@@ -10,6 +10,8 @@ WeatherSaver - Saves weather analysis data to CSV
 WeatherHero - Loads and analyzes weather data and saves summary statistics 
 """
 
+from functools import reduce
+import matplotlib.pyplot as plt
 import os
 import pandas as pd
 import logging
@@ -129,7 +131,44 @@ class WeatherAnalyzer:
         except Exception as e:
             logging.error(f"Failed to generate summary statistics. Terminating program due to error {e}")
             raise
+
+    def average_wind_speed_per_direction(self):
+        records = self.df.to_dict('records')    
+   
+        wind_mapping = pd.DataFrame(list(map(lambda x: (x['WindGustDir'], x['WindGustSpeed']), records)),
+                                    columns=['WindGustDir', 'WindGustSpeed'])
         
+        wind_avg = wind_mapping.groupby('WindGustDir')['WindGustSpeed'].mean()
+
+        plt.bar(wind_avg.index, wind_avg.values)
+        plt.title('Average Wind Gust Speed by Direction')
+        plt.xlabel('Direction')
+        plt.ylabel('Speed (km/hr)')
+        plt.show()
+        
+    def average_rainfall_hot_vs_cold(self) -> None:
+        records = self.df.to_dict('records')
+ 
+        hot_days = pd.DataFrame(list(filter(lambda x: x['MaxTemp'] > 30, records)))
+        cold_days = pd.DataFrame(list(filter(lambda x: x['MinTemp'] < 10, records)))
+
+        avg_df = pd.concat([
+            pd.Series({"type": "Hot Days", 'avg_rainfall': hot_days["Rainfall"].mean()}),
+            pd.Series({"type": "Cold Days", 'avg_rainfall': cold_days["Rainfall"].mean()})            
+        ])
+
+        plt.bar(avg_df['type'], avg_df['avg_rainfall'])
+        plt.title('Average Rainfall: Hot vs Cold Days')
+        plt.xlabel('Type')
+        plt.ylabel('Rainfall (mm)')
+        plt.show()
+
+    def total_rainfall(self) -> None:
+        records = self.df.to_dict('records')  
+
+        total_rainfall = reduce(lambda acc, x: acc + x['Rainfall'], records, 0)
+        print(f"Total Rainfall in Dataset (mm): {total_rainfall:.2f}")
+
     
 class WeatherSaver:
     """
@@ -162,18 +201,33 @@ class WeatherHero:
     """
     def __init__(self, data_filepath: str, output_file: str):
         self.data_loader = WeatherLoader(data_filepath)
-        self.data_storage = WeatherSaver(output_file)
-        self.data_analyzer = None 
+        self.data_storage = WeatherSaver(output_file) 
+        self._load_weather_data()
+
+        self.data_analyzer = WeatherAnalyzer(self.df)
+
+    def _load_weather_data(self) -> None:
+        self.df = pd.concat([chunk for chunk in self.data_loader.iter_rows(self.data_loader.default_path, chunk_size=2000)])
+
+    def _clean_data(self) -> None:
+        self.df['Rainfall'] = pd.to_numeric(self.df['Rainfall'], errors='coerce').fillna(0)
+
+    def print_head(self) -> None:
+        print(self.df.head())
 
     def process_weather_data(self) -> None:
         """
         Loads and analyzes weather data and saves summary statistics
         """
         try:
-            df = pd.concat([chunk for chunk in self.data_loader.iter_rows(self.data_loader.default_path, chunk_size=2000)])
-            self.data_analyzer = WeatherAnalyzer(df)
+            self._clean_data()
             summary_statistics = self.data_analyzer.generate_summary_statistics()
             self.data_storage.save_summary(summary_statistics)
+
+            self.data_analyzer.average_wind_speed_per_direction()
+            self.data_analyzer.total_rainfall()
+            self.data_analyzer.average_rainfall_hot_vs_cold()
+
         except Exception as e:
             logging.error(f"process_weather_data was terminated by the following error - {e}")    
 
