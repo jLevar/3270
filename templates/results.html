@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Results</title>
+</head>
+<body>
+<div class="container">
+    <h1>Analysis Results</h1>
+
+    <h2>Visualizations</h2>
+    {% for path in plot_paths %}
+        <img src="/{{ path }}" class="plot">
+    {% endfor %}
+
+    <a class="button" href="/">Back</a>
+</div>
+</body>
+</html>

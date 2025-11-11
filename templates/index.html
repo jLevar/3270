@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Weather Hero</title>
+</head>
+<body>
+<div class="container">
+    <h1>Weather Hero</h1>
+    <a class="button" href="/run">Run Weather Analysis</a>
+
+    <h2>Past Runs</h2>
+    <ul>
+        {% for record in history %}
+        <li>{{ record.timestamp }} — Rainfall: {{ record.total_rainfall }} mm</li>
+        {% endfor %}
+    </ul>
+</div>
+</body>
+</html>
