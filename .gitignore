@@ -4,4 +4,4 @@ weather_hero/**/
 logs/
 static/plots
 __pycache__
-*.db
+*.db    

@@ -78,3 +78,29 @@ I used these techniques to create the following charts:
 - Average Windspeed by Direction
 - Total Rainfall in Dataset
 
+### Module 9
+In this module I've converted my application into a 3-tier web application with a browser-based user interface. I created an app.py file using flask, which delivers the necessary html and css files to the client, while also managing the backend analysis and database management. I had to modify my WeatherAnalysis class slightly, making it so that instead of running plt.show(), it saves the plot to ./static/plots so that the Flask app can access it. 
+
+#### Setup
+1. Ensure File Structure Matches Diagram
+joshua_levar_3270_module_9/
+│
+├── app.py
+│
+├── weather_hero/
+│   ├── __init__.py
+│   └──  weather_hero.py
+│
+├── templates/
+│   ├── index.html
+│   └── results.html
+│
+├── static/
+│   ├── style.css
+│   └── plots/
+│       └── # The plots will be saved here on runtime
+│
+└── requirements.txt
+
+2. Run app.py in project root directory
+3. Open localhost:5000 in browser
