@@ -7,12 +7,26 @@
 <body>
 <div class="container">
     <h1>Weather Hero</h1>
-    <a class="button" href="/run">Run Weather Analysis</a>
 
-    <h2>Past Runs</h2>
+    <form action="/run" method="post">
+        <label for="name">Your Name:</label>
+        <input type="text" id="name" name="name" required>
+
+        <label for="reason">Reason for Running Data Analysis:</label>
+        <input type="text" id="reason" name="reason" required>
+
+        <button class="button" type="submit">Run Weather Analysis</button>
+    </form>
+    <h2>Run Counter: {{ run_count }}</h2>
+    <h2>Past Inputs</h2>
     <ul>
         {% for record in history %}
-        <li>{{ record.timestamp }} — Rainfall: {{ record.total_rainfall }} mm</li>
+        <li>
+            {{ record.timestamp.strftime("%Y-%m-%d %H:%M") }} — 
+            <strong>{{ record.name }}</strong> — Reason: {{ record.reason }}
+        </li>
+        {% else %}
+        <li>No past runs yet.</li>
         {% endfor %}
     </ul>
 </div>
