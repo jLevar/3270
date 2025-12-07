@@ -13,6 +13,8 @@ WeatherHero - Loads and analyzes weather data and saves summary statistics
 import asyncio
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from functools import reduce
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import os
 import pandas as pd
@@ -134,7 +136,7 @@ class WeatherAnalyzer:
             logging.error(f"Failed to generate summary statistics. Terminating program due to error {e}")
             raise
 
-    def average_wind_speed_per_direction(self):
+    def average_wind_speed_per_direction(self, output_path="static/plots/avg_windspeed.jpg"):
         records = self.df.to_dict('records')    
    
         wind_mapping = pd.DataFrame(list(map(lambda x: (x['WindGustDir'], x['WindGustSpeed']), records)),
@@ -146,9 +148,13 @@ class WeatherAnalyzer:
         plt.title('Average Wind Gust Speed by Direction')
         plt.xlabel('Direction')
         plt.ylabel('Speed (km/hr)')
-        plt.show()
+
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        plt.savefig(output_path)
+        plt.close()
+        return output_path
         
-    def average_rainfall_hot_vs_cold(self) -> None:
+    def average_rainfall_hot_vs_cold(self, output_path="static/plots/avg_rainfall.jpg") -> None:
         records = self.df.to_dict('records')
  
         hot_days = pd.DataFrame(list(filter(lambda x: x['MaxTemp'] > 30, records)))
@@ -163,7 +169,11 @@ class WeatherAnalyzer:
         plt.title('Average Rainfall: Hot vs Cold Days')
         plt.xlabel('Type')
         plt.ylabel('Rainfall (mm)')
-        plt.show()
+
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        plt.savefig(output_path)
+        plt.close()
+        return output_path
 
     def total_rainfall(self) -> pd.Series:
         """
@@ -193,11 +203,20 @@ class WeatherAnalyzer:
         print(total_rainfall)
         return total_rainfall
 
-    def total_rainfall(self) -> None:
+    def total_rainfall(self, output_path="static/plots/total_rainfall.jpg") -> None:
         records = self.df.to_dict('records')  
 
         total_rainfall = reduce(lambda acc, x: acc + x['Rainfall'], records, 0)
-        print(f"Total Rainfall in Dataset (mm): {total_rainfall:.2f}")
+        plt.bar([0], [total_rainfall])  # x-position and height
+        plt.xticks([0], ["Rainfall"])  # optional label
+        plt.ylabel("mm")
+        plt.title("Total Rainfall on Record")
+
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        plt.savefig(output_path)
+        plt.close()
+        return output_path
+
 
     
 class WeatherSaver:
@@ -261,16 +280,18 @@ class WeatherHero:
             self._clean_data()
             summary_statistics = self.data_analyzer.generate_summary_statistics()
             self.data_storage.save_summary(summary_statistics)
+            
+            figure_paths = [] 
+            figure_paths.append(self.data_analyzer.average_wind_speed_per_direction())
+            figure_paths.append(self.data_analyzer.total_rainfall())
+            figure_paths.append(self.data_analyzer.average_rainfall_hot_vs_cold())
 
-            self.data_analyzer.average_wind_speed_per_direction()
-            self.data_analyzer.total_rainfall()
-            self.data_analyzer.average_rainfall_hot_vs_cold()
+            return figure_paths
 
         except Exception as e:
             logging.error(f"process_weather_data was terminated by the following error - {e}")    
 
-
-async def main():
+if __name__ == "__main__":
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) # AI Written
     data_path = os.path.join(base_dir, 'data', 'test.csv') # AI Written
     output_path = os.path.join(base_dir, 'data', 'summary.csv')

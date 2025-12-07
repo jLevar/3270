@@ -4,3 +4,4 @@ weather_hero/**/
 logs/
 static/
 *.db
+__pycache__
