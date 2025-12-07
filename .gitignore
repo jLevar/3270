@@ -2,3 +2,5 @@ data/
 venv/
 weather_hero/**/
 logs/
+static/
+*.db
