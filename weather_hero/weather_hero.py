@@ -289,9 +289,10 @@ class WeatherHero:
             return figure_paths
 
         except Exception as e:
-            logging.error(f"process_weather_data was terminated by the following error - {e}")    
+            logging.error(f"process_weather_data was terminated by the following error - {e}")  
+            return 0, 0  
 
-if __name__ == "__main__":
+async def main():
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) # AI Written
     data_path = os.path.join(base_dir, 'data', 'test.csv') # AI Written
     output_path = os.path.join(base_dir, 'data', 'summary.csv')
