@@ -3,9 +3,6 @@
 ## Description
 Weather Hero is a python package that displays summary statistics derived from the Australian Weather Database.
 
-## Usage
-
-
 ## Setup
 
 ### Module 1
