@@ -78,7 +78,12 @@ I used these techniques to create the following charts:
 ### Module 7
 I implemeneted asynchronous and multiprocessing processes to optimize my code base. I turned the loading of the CSV into an async task so that it would run in the background and not block the main thread. I also redid how I calculated total rainfall. Instead of summing the entire dataframe, I split it up by location and then summed all those components as they came in.
 
-Since I added no new functionality, I did not add any additional test cases. However, I did have to modify the existing ones to account for the new asyncronous behavior. After making those simple modifications, my changes were able to pass all of the tests.### Module 9
+Since I added no new functionality, I did not add any additional test cases. However, I did have to modify the existing ones to account for the new asyncronous behavior. After making those simple modifications, my changes were able to pass all of the tests.
+
+### Module 8
+See Google Colab
+
+### Module 9
 In this module I've converted my application into a 3-tier web application with a browser-based user interface. I created an app.py file using flask, which delivers the necessary html and css files to the client, while also managing the backend analysis and database management. I had to modify my WeatherAnalysis class slightly, making it so that instead of running plt.show(), it saves the plot to ./static/plots so that the Flask app can access it. 
 
 #### Setup

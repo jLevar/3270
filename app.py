@@ -33,7 +33,7 @@ def index():
     return render_template("index.html", history=history, run_count=run_count)
 
 @app.route("/run", methods=['POST'])
-def run_analysis():
+async def run_analysis():
     name = request.form["name"]
     reason = request.form["reason"]
 
@@ -46,6 +46,7 @@ def run_analysis():
     data_path = os.path.join(base_dir, 'data', 'test.csv') 
     output_path = os.path.join(base_dir, 'data', 'summary.csv')
     analyzer = WeatherHero(data_path, output_path)
+    await analyzer.start()
 
     plot_paths = analyzer.process_weather_data()
     return render_template(

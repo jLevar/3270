@@ -203,7 +203,7 @@ class WeatherAnalyzer:
         print(total_rainfall)
         return total_rainfall
 
-    def total_rainfall(self, output_path="static/plots/total_rainfall.jpg") -> None:
+    def total_rainfall_plot(self, output_path="static/plots/total_rainfall.jpg") -> None:
         records = self.df.to_dict('records')  
 
         total_rainfall = reduce(lambda acc, x: acc + x['Rainfall'], records, 0)
@@ -283,7 +283,7 @@ class WeatherHero:
             
             figure_paths = [] 
             figure_paths.append(self.data_analyzer.average_wind_speed_per_direction())
-            figure_paths.append(self.data_analyzer.total_rainfall())
+            figure_paths.append(self.data_analyzer.total_rainfall_plot())
             figure_paths.append(self.data_analyzer.average_rainfall_hot_vs_cold())
 
             return figure_paths
